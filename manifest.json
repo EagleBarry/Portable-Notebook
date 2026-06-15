@@ -1,0 +1,13 @@
+{
+	"name": "Copy Tabs",
+	"description": "Copy to special boxes in memory",
+	"version": "1.0",
+	"manifest_version": 3,
+	"action": {
+		"default_popup": "hello.html"
+	},
+	"background": {
+		"service_worker": "background.js"
+	},
+	"permissions": ["contextMenus", "storage", "clipboardWrite"]
+}
