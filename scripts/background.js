@@ -48,3 +48,13 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 chrome.runtime.onInstalled.addListener(updateContextMenu);
+
+chrome.action.onClicked.addListener(async (tab) => {
+	try {
+		await chrome.sidePanel.open({
+			windowId: tab.windowId,
+		});
+	} catch (err) {
+		console.error(err);
+	}
+});
