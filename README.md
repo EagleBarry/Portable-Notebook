@@ -18,7 +18,9 @@ Select text then right-clcik in order to send it to one of your tabs.
 Right-click next to the tabs in order to:
 
 -Send the data from the Active tab to another tab
+
 -Clear the current tab content
+
 -Close a tab
 
 ## How it works
