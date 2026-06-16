@@ -4,7 +4,6 @@
 	"version": "1.1",
 	"manifest_version": 3,
 	"action": {
-		"default_popup": "main.html",
 		"default_icon": "sketchbook.png"
 	},
 	"icons": {
@@ -16,5 +15,14 @@
 	"background": {
 		"service_worker": "scripts/background.js"
 	},
-	"permissions": ["contextMenus", "storage", "clipboardWrite"]
+	"side_panel": {
+		"default_path": "main.html"
+	},
+	"permissions": [
+		"tabs",
+		"sidePanel",
+		"contextMenus",
+		"storage",
+		"clipboardWrite"
+	]
 }
