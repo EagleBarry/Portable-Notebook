@@ -1,4 +1,4 @@
-### A simple Chrome extension for saving and organizing text across multiple notebook style tabs.
+### **A simple Chrome extension for saving and organizing text across multiple notebook style tabs. **
 
 ## Features:
 
