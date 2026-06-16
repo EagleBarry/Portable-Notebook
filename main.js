@@ -1,150 +1,112 @@
 let tabToName = null;
 let tabToDelete = null;
+const customArea = document.getElementById("my-custom-area");
 
-function showNameModal(tabId) {
-	tabToName = tabId;
-	const modal = document.getElementById("NameModal");
-	const input = document.getElementById("newTabName");
-	input.value = "";
-	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
-		const tab = tabs.find((tab) => tab.id === tabId);
-		if (tab) input.value = tab.name;
-	});
+customArea.addEventListener("contextmenu", (e) => {
+	e.preventDefault();
+	const oldMenu = document.getElementById("customContextMenu");
+	if (!!oldMenu) oldMenu.remove();
 
-	modal.style.display = "flex";
-	input.focus();
-}
+	const menu = document.createElement("div");
+	menu.id = "customContextMenu";
+	menu.style.position = "absolute";
+	menu.style.backgroundColor = "white";
+	menu.style.border = "1px solid #ccc";
+	menu.style.boxShadow = "2px 2px 5px rgba(0,0,0,0.2)";
+	menu.style.zIndex = "1000";
+	menu.style.left = `${e.clientX}px`;
+	menu.style.top = `${e.clientY}px`;
 
-function showDeleteModal(tabId, tabName) {
-	tabToDelete = tabId;
-	const modal = document.getElementById("deleteModal");
-	const message = document.getElementById("deleteModalMessage");
-	message.textContent = `Are you sure you want to delete "${tabName}"?`;
-	modal.style.display = "flex";
-}
+	const transferData = document.createElement("div");
+	transferData.textContent = "Send tab data to different tab";
+	transferData.style.padding = "8px 12px";
+	transferData.style.cursor = "pointer";
+	transferData.addEventListener("click", () => {
+		menu.remove();
 
-function hideDeleteModal() {
-	document.getElementById("deleteModal").style.display = "none";
-	tabToDelete = null;
-}
+		chrome.storage.sync.get(["lastActiveTab", "tabs"], (result) => {
+			const currentTabId = result.lastActiveTab;
+			const allTabs = result.tabs || [];
 
-document.getElementById("confirmDelete").addEventListener("click", () => {
-	if (tabToDelete) {
-		deleteTab(tabToDelete);
-		hideDeleteModal();
-	}
-});
+			const otherTabs = allTabs.filter((tab) => tab.id !== currentTabId);
 
-document
-	.getElementById("cancelDelete")
-	.addEventListener("click", hideDeleteModal);
+			const modal = document.getElementById("transferModal");
+			const tabList = document.getElementById("transferTabList");
+			tabList.innerHTML = "";
 
-document.getElementById("deleteModal").addEventListener("click", (e) => {
-	if (e.target.id === "deleteModal") {
-		hideDeleteModal();
-	}
-});
+			otherTabs.forEach((tab) => {
+				const label = document.createElement("label");
+				label.style.display = "block";
+				label.style.margin = "5px 0";
 
-function hideNameModal() {
-	document.getElementById("NameModal").style.display = "none";
-	tabToName = null;
-}
+				const checkbox = document.createElement("input");
+				checkbox.type = "checkbox";
+				checkbox.value = tab.id;
+				checkbox.style.marginRight = "8px";
 
-function NameTab(tabId) {
-	showNameModal(tabId);
-}
+				const tabName = document.createElement("span");
+				tabName.textContent = tab.name;
 
-document.getElementById("confirmName").addEventListener("click", () => {
-	if (!tabToName) return;
+				label.appendChild(checkbox);
+				label.appendChild(tabName);
+				tabList.appendChild(label);
+			});
 
-	const newName = document.getElementById("newTabName").value.trim();
-	if (newName === "") return;
-
-	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
-		const tab = tabs.find((tab) => tab.id === tabToName);
-		if (tab) {
-			tab.name = newName;
-			saveTabs(tabs);
-			renderTabs(tabs);
-		}
-	});
-
-	hideNameModal();
-});
-
-document.getElementById("cancelName").addEventListener("click", hideNameModal);
-
-document.getElementById("NameModal").addEventListener("click", (e) => {
-	if (e.target.id === "NameModal") {
-		hideNameModal();
-	}
-});
-
-function addTab() {
-	showNameModal(null);
-}
-
-function confirmAddTab() {
-	const newName = document.getElementById("newTabName").value.trim();
-	if (newName === "") return;
-
-	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
-		const newTab = {
-			id: Date.now().toString(),
-			name: newName,
-			content: "",
-		};
-		tabs.push(newTab);
-		saveTabs(tabs);
-		renderTabs(tabs);
-		switchTab(newTab.id);
-	});
-
-	hideNameModal();
-}
-
-document.getElementById("confirmName").addEventListener("click", () => {
-	if (tabToName === null) {
-		confirmAddTab();
-	} else {
-		const newName = document.getElementById("newTabName").value.trim();
-		if (newName === "") return;
-
-		chrome.storage.sync.get(["tabs"], (result) => {
-			const tabs = result.tabs || [];
-			const tab = tabs.find((tab) => tab.id === tabToName);
-			if (tab) {
-				tab.name = newName;
-				saveTabs(tabs);
-				renderTabs(tabs);
-			}
+			modal.style.display = "flex";
 		});
-
-		hideNameModal();
-	}
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-	loadTabs();
-
-	document.getElementById("addTab").addEventListener("click", () => {
-		tabToName = null;
-		showNameModal(null);
 	});
 
-	document
-		.getElementById("noteContent")
-		.addEventListener("input", saveCurrentTabContent);
+	const clearActiveTab = document.createElement("div");
+	clearActiveTab.textContent = "Clear Active tab";
+	clearActiveTab.style.padding = "8px 12px";
+	clearActiveTab.style.cursor = "pointer";
+	clearActiveTab.addEventListener("click", () => {
+		chrome.storage.sync.get(["tabs", "lastActiveTab"], (result) => {
+			const allTabs = Array.isArray(result.tabs) ? result.tabs : [];
+			const lastActiveTab = result.lastActiveTab;
+			const targetTab = allTabs.find((t) => t.id === lastActiveTab);
+			if (targetTab) {
+				targetTab.content = "";
+				document.getElementById("noteContent").value = "";
+			}
+			chrome.storage.sync.set({
+				tabs: allTabs,
+			});
+		});
+		menu.remove();
+	});
+
+	const closeActiveTabOption = document.createElement("div");
+	closeActiveTabOption.textContent = "Close Active tab";
+	closeActiveTabOption.style.padding = "8px 12px";
+	closeActiveTabOption.style.cursor = "pointer";
+	closeActiveTabOption.addEventListener("click", () => {
+		chrome.storage.sync.get(["lastActiveTab"], (result) => {
+			const lastActiveTab = result.lastActiveTab;
+			deleteTab(lastActiveTab);
+		});
+		menu.remove();
+	});
+
+	menu.appendChild(transferData);
+	menu.appendChild(clearActiveTab);
+	menu.appendChild(closeActiveTabOption);
+	document.body.appendChild(menu);
+
+	document.addEventListener(
+		"click",
+		() => {
+			menu.remove();
+		},
+		{ once: true },
+	);
 });
 
 function loadTabs() {
 	chrome.storage.sync.get(
 		["tabs", "lastCopiedToTab", "lastActiveTab"],
 		(result) => {
-			const tabs = result.tabs || [];
+			const tabs = Array.isArray(result.tabs) ? result.tabs : [];
 			const lastCopiedToTab = result.lastCopiedToTab;
 			const lastActiveTab = result.lastActiveTab;
 
@@ -177,6 +139,10 @@ function saveTabs(tabs) {
 }
 
 function renderTabs(tabs) {
+	if (!Array.isArray(tabs)) tabs = [];
+
+	if (tabs.length === 0) return;
+
 	const tabsContainer = document.getElementById("tabs");
 	tabsContainer.innerHTML = "";
 
@@ -186,9 +152,11 @@ function renderTabs(tabs) {
 		if (index === 0) tabElement.classList.add("active");
 
 		const tabName = document.createElement("span");
+		tabName.className = "tab-name";
 		tabName.textContent = tab.name;
-		tabName.addEventListener("dblclick", () => {
-			NameTab(tab.id);
+		tabName.addEventListener("dblclick", (e) => {
+			e.stopPropagation();
+			showNameModal(tab.id);
 		});
 
 		const closeButton = document.createElement("span");
@@ -215,7 +183,7 @@ function renderTabs(tabs) {
 
 function switchTab(tabId) {
 	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
+		const tabs = Array.isArray(result.tabs) ? result.tabs : [];
 		const tabIndex = tabs.findIndex((tab) => tab.id === tabId);
 		if (tabIndex === -1) return;
 
@@ -225,47 +193,101 @@ function switchTab(tabId) {
 		});
 
 		document.getElementById("noteContent").value = tabs[tabIndex].content;
-
 		chrome.storage.sync.set({ lastActiveTab: tabId });
 	});
 }
 
-function addTab() {
-	const tabName = prompt("Enter a name for the new tab:");
-	if (tabName === null) return;
-
+function saveCurrentTabContent() {
 	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
-		const newTab = {
-			id: Date.now().toString(),
-			name: tabName.trim() || `Untitled Note ${tabs.length + 1}`,
-			content: "",
-		};
-		tabs.push(newTab);
+		const tabs = Array.isArray(result.tabs) ? result.tabs : [];
+		const activeTabElement = document.querySelector(".tab.active");
+		if (!activeTabElement) return;
+
+		const activeTabIndex = Array.from(
+			document.querySelectorAll(".tab"),
+		).indexOf(activeTabElement);
+		if (activeTabIndex === -1 || !tabs[activeTabIndex]) return;
+
+		tabs[activeTabIndex].content = document.getElementById("noteContent").value;
 		saveTabs(tabs);
-		renderTabs(tabs);
-		switchTab(newTab.id);
 	});
 }
 
-function NameTab(tabId) {
-	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
-		const tab = tabs.find((tab) => tab.id === tabId);
-		if (!tab) return;
+function showNameModal(tabId) {
+	tabToName = tabId;
+	const modal = document.getElementById("NameModal");
+	const input = document.getElementById("newTabName");
 
-		const newName = prompt("Name for tab:", tab.name);
-		if (newName !== null) {
-			tab.name = newName.trim() || tab.name;
+	if (tabId) {
+		chrome.storage.sync.get(["tabs"], (result) => {
+			const tabs = Array.isArray(result.tabs) ? result.tabs : [];
+			const tab = tabs.find((tab) => tab.id === tabId);
+			if (tab) input.value = tab.name;
+		});
+	} else {
+		input.value = "";
+	}
+
+	modal.style.display = "flex";
+	input.focus();
+}
+
+function hideNameModal() {
+	document.getElementById("NameModal").style.display = "none";
+}
+
+function showDeleteModal(tabId, tabName) {
+	tabToDelete = tabId;
+	const modal = document.getElementById("deleteModal");
+	const message = document.getElementById("deleteModalMessage");
+	message.textContent = `Are you sure you want to delete "${tabName}"?`;
+	modal.style.display = "flex";
+}
+
+function hideDeleteModal() {
+	document.getElementById("deleteModal").style.display = "none";
+	tabToDelete = null;
+}
+
+function addTab() {
+	showNameModal(null);
+}
+
+function confirmNameAction() {
+	const newName = document.getElementById("newTabName").value.trim();
+	if (newName === "") return;
+
+	if (tabToName === null) {
+		chrome.storage.sync.get(["tabs"], (result) => {
+			const tabs = Array.isArray(result.tabs) ? result.tabs : [];
+			const newTab = {
+				id: Date.now().toString(),
+				name: newName,
+				content: "",
+			};
+			tabs.push(newTab);
 			saveTabs(tabs);
 			renderTabs(tabs);
-		}
-	});
+			switchTab(newTab.id);
+		});
+	} else {
+		chrome.storage.sync.get(["tabs"], (result) => {
+			const tabs = Array.isArray(result.tabs) ? result.tabs : [];
+			const tabIndex = tabs.findIndex((tab) => tab.id === tabToName);
+			if (tabIndex !== -1) {
+				tabs[tabIndex].name = newName;
+				saveTabs(tabs);
+				renderTabs(tabs);
+			}
+		});
+	}
+
+	hideNameModal();
 }
 
 function deleteTab(tabId) {
 	chrome.storage.sync.get(["tabs", "lastActiveTab"], (result) => {
-		let tabs = result.tabs || [];
+		let tabs = Array.isArray(result.tabs) ? result.tabs : [];
 		const lastActiveTab = result.lastActiveTab;
 
 		tabs = tabs.filter((tab) => tab.id !== tabId);
@@ -286,18 +308,79 @@ function deleteTab(tabId) {
 	});
 }
 
-function saveCurrentTabContent() {
-	chrome.storage.sync.get(["tabs"], (result) => {
-		const tabs = result.tabs || [];
-		const activeTabElement = document.querySelector(".tab.active");
-		if (!activeTabElement) return;
+document.getElementById("cancelTransfer").addEventListener("click", () => {
+	document.getElementById("transferModal").style.display = "none";
+});
 
-		const activeTabIndex = Array.from(
-			document.querySelectorAll(".tab"),
-		).indexOf(activeTabElement);
-		if (activeTabIndex === -1 || !tabs[activeTabIndex]) return;
+document.getElementById("confirmTransfer").addEventListener("click", () => {
+	const checkboxes = document.querySelectorAll(
+		"#transferTabList input[type='checkbox']:checked",
+	);
+	const selectedTabIds = Array.from(checkboxes).map(
+		(checkbox) => checkbox.value,
+	);
 
-		tabs[activeTabIndex].content = document.getElementById("noteContent").value;
-		saveTabs(tabs);
+	if (selectedTabIds.length === 0) {
+		return;
+	}
+
+	chrome.storage.sync.get(["lastActiveTab", "tabs"], (result) => {
+		const currentTabId = result.lastActiveTab;
+		const allTabs = result.tabs || [];
+		const currentTab = allTabs.find((tab) => tab.id === currentTabId);
+
+		if (!currentTab) {
+			return;
+		}
+
+		selectedTabIds.forEach((tabId) => {
+			const targetTab = allTabs.find((tab) => tab.id === tabId);
+			if (targetTab) {
+				targetTab.content += "\n\n" + currentTab.content;
+			}
+		});
+
+		chrome.storage.sync.set({ tabs: allTabs }, () => {
+			document.getElementById("transferModal").style.display = "none";
+		});
 	});
-}
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+	loadTabs();
+
+	document.getElementById("addTab").addEventListener("click", addTab);
+
+	document.getElementById("transferModal").addEventListener("click", (e) => {
+		if (e.target.id === "transferModal") {
+			document.getElementById("transferModal").style.display = "none";
+		}
+	});
+
+	document
+		.getElementById("confirmName")
+		.addEventListener("click", confirmNameAction);
+	document
+		.getElementById("cancelName")
+		.addEventListener("click", hideNameModal);
+	document.getElementById("NameModal").addEventListener("click", (e) => {
+		if (e.target.id === "NameModal") hideNameModal();
+	});
+
+	document.getElementById("confirmDelete").addEventListener("click", () => {
+		if (tabToDelete) {
+			deleteTab(tabToDelete);
+			hideDeleteModal();
+		}
+	});
+	document
+		.getElementById("cancelDelete")
+		.addEventListener("click", hideDeleteModal);
+	document.getElementById("deleteModal").addEventListener("click", (e) => {
+		if (e.target.id === "deleteModal") hideDeleteModal();
+	});
+
+	document
+		.getElementById("noteContent")
+		.addEventListener("input", saveCurrentTabContent);
+});

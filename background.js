@@ -34,7 +34,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 				chrome.storage.sync.set({
 					tabs: tabs,
-					lastCopiedToTab: tabId, 
+					lastCopiedToTab: tabId,
 				});
 			}
 		});
