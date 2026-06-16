@@ -1,118 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Notes Tabs</title>
-		<style>
-			body {
-				width: 400px;
-				height: 500px;
-				margin: 0;
-				padding: 0;
-				font-family: Arial, sans-serif;
-			}
-			.tab-bar {
-				display: flex;
-				border-bottom: 1px solid #ccc;
-				padding: 5px;
-				background-color: #f1f1f1;
-			}
-			.tab {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				padding: 8px 12px;
-				margin-right: 5px;
-				background-color: #ddd;
-				border-radius: 5px 5px 0 0;
-				cursor: pointer;
-				max-width: 200px;
-				overflow: hidden;
-			}
-			.tab-name {
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-			.tab.active {
-				background-color: #029139;
-				font-weight: bold;
-			}
-			.tab-close {
-				margin-left: 8px;
-				cursor: pointer;
-				font-weight: bold;
-				color: #555;
-			}
-			.tab-close:hover {
-				color: #000;
-			}
-			.add-tab {
-				margin-left: auto;
-				padding: 8px;
-				background-color: #4caf50;
-				color: white;
-				border: none;
-				border-radius: 3px;
-				cursor: pointer;
-			}
-			.content {
-				padding: 10px;
-				height: calc(100% - 40px);
-				overflow-y: auto;
-			}
-			textarea {
-				width: 100%;
-				height: 100%;
-				border: 1px solid #ccc;
-				padding: 8px;
-				box-sizing: border-box;
-			}
-
-			.modal {
-				display: none;
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(0, 0, 0, 0.5);
-				z-index: 1000;
-				justify-content: center;
-				align-items: center;
-			}
-
-			.modal-content {
-				background-color: white;
-				padding: 20px;
-				border-radius: 5px;
-				width: 80%;
-				max-width: 300px;
-				box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-				text-align: center;
-			}
-
-			.modal-content h3 {
-				margin-top: 0;
-			}
-
-			.modal-content input {
-				width: 100%;
-				padding: 8px;
-				margin: 10px 0;
-				box-sizing: border-box;
-			}
-
-			.modal-buttons {
-				display: flex;
-				justify-content: flex-end;
-				gap: 10px;
-			}
-
-			.modal-buttons button {
-				padding: 8px 12px;
-				cursor: pointer;
-			}
-		</style>
+		<link rel="stylesheet" href="styles.css" />
 	</head>
 	<body>
 		<div id="my-custom-area">
@@ -148,49 +37,21 @@
 			</div>
 		</div>
 
-		<div
-			id="transferModal"
-			style="
-				display: none;
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background: rgba(0, 0, 0, 0.5);
-				z-index: 1000;
-				justify-content: center;
-				align-items: center;
-			"
-		>
-			<div
-				style="
-					background: white;
-					padding: 20px;
-					border-radius: 5px;
-					width: 80%;
-					max-width: 400px;
-				"
-			>
+		<div id="transferModal">
+			<div id="transferModalInner">
 				<h3>Send Tab Data To:</h3>
-				<div
-					id="transferTabList"
-					style="max-height: 200px; overflow-y: auto"
-				></div>
-				<div
-					style="
-						margin-top: 10px;
-						display: flex;
-						justify-content: flex-end;
-						gap: 10px;
-					"
-				>
+				<div id="transferTabList"></div>
+				<div id="transferModalButtons">
 					<button id="cancelTransfer">Cancel</button>
 					<button id="confirmTransfer">Send</button>
 				</div>
 			</div>
 		</div>
 
-		<script src="main.js"></script>
+		<script src="scripts/popup.js"></script>
+		<script src="scripts/contextMenu.js"></script>
+		<script src="scripts/tabs.js"></script>
+		<script src="scripts/modals.js"></script>
+		<script src="scripts/storage.js"></script>
 	</body>
 </html>

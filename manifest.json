@@ -14,7 +14,7 @@
 		"128": "sketchbook.png"
 	},
 	"background": {
-		"service_worker": "background.js"
+		"service_worker": "scripts/background.js"
 	},
 	"permissions": ["contextMenus", "storage", "clipboardWrite"]
 }
